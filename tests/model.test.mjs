@@ -134,6 +134,36 @@ test.describe("intervalMilliseconds", () => {
   });
 });
 
+test.describe("scrolled", () => {
+  const BOUNDS = { minimum: 0, maximum: 100, step: 1 };
+
+  for (const [label, scroll, expected] of [
+    ["one notch up adds a step", { notches: 1, isFast: false }, 51],
+    ["one notch down takes a step", { notches: -1, isFast: false }, 49],
+    ["Shift adds ten steps", { notches: 1, isFast: true }, 60],
+    ["Shift takes ten steps", { notches: -1, isFast: true }, 40],
+    ["several notches add up", { notches: 3, isFast: false }, 53],
+    ["never goes over the maximum", { notches: 6, isFast: true }, 100],
+    ["never goes under the minimum", { notches: -6, isFast: true }, 0],
+  ]) {
+    test(label, () => {
+      // ACT
+      const result = Model.scrolled(50, { ...BOUNDS, ...scroll });
+
+      // ASSERT
+      assert.equal(result, expected);
+    });
+  }
+
+  test("scales with the field step", () => {
+    // ACT
+    const result = Model.scrolled(HALF_SECOND, { minimum: 0, maximum: Model.MAXIMUM_HOLD_MILLISECONDS, step: 100, notches: 1, isFast: true });
+
+    // ASSERT
+    assert.equal(result, HALF_SECOND + ONE_SECOND);
+  });
+});
+
 test.describe("delayMilliseconds", () => {
   test("converts the delay from seconds", () => {
     // ASSERT

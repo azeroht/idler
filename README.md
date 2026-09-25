@@ -103,6 +103,7 @@ calls `omarchy-shell azeroht.idler`, remove it from `~/.config/hypr/bindings.lua
 | Panel hold field               | Keep the key down that long, in ms (0 for a tap)       |
 | Panel interval and unit        | Change the pace; anything under 100 ms is raised to it |
 | Panel start delay field        | Wait that long, in s, after switching on (0 at once)   |
+| Mouse wheel on a number field  | One step per notch, ten steps with Shift held          |
 
 Every change applies at once and is saved in `~/.local/state/azeroht-idler.json`:
 

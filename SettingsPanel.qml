@@ -6,7 +6,8 @@ import "Model.js" as Model
 // Idler settings, styled like the native panels: on / off, the repeated
 // action (preset keys, a free key or the mouse) with how long a key is held,
 // the interval with its unit, and the delay before the first pulse. Every
-// choice goes up through changed() and applies at once.
+// choice goes up through changed() and applies at once. Every number also
+// follows the mouse wheel: one step per notch, ten with Shift held.
 Column {
   id: panel
   property var state: Model.DEFAULTS
@@ -21,6 +22,30 @@ Column {
     fontSize: Style.font.bodySmall
     foreground: panel.foreground
     bordered: true
+  }
+
+  component WheelNumberField: NumberField {
+    id: wheelField
+    // Angle left over from a touchpad, until it makes a whole notch.
+    property real wheelRest: 0
+
+    WheelHandler {
+      onWheel: function(event) {
+        const delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x
+        wheelField.wheelRest += delta
+        const notches = Math.trunc(wheelField.wheelRest / Model.WHEEL_NOTCH)
+        if (notches === 0) return
+        wheelField.wheelRest -= notches * Model.WHEEL_NOTCH
+        const next = Model.scrolled(wheelField.value, {
+          notches: notches,
+          isFast: (event.modifiers & Qt.ShiftModifier) !== 0,
+          step: wheelField.stepSize,
+          minimum: wheelField.from,
+          maximum: wheelField.to
+        })
+        if (next !== wheelField.value) wheelField.modified(next)
+      }
+    }
   }
 
   PanelHero {
@@ -80,7 +105,7 @@ Column {
   }
 
   // Hold: how long the key stays down on each pulse, 0 for a plain tap.
-  NumberField {
+  WheelNumberField {
     visible: panel.state.action !== Model.MOUSE
     label: "Hold (ms), 0 for a tap"
     from: 0
@@ -101,7 +126,7 @@ Column {
     width: parent.width
     spacing: Style.space(6)
 
-    NumberField {
+    WheelNumberField {
       id: amount
       anchors.verticalCenter: parent.verticalCenter
       from: 1
@@ -127,7 +152,7 @@ Column {
   }
 
   // Start delay: wait after switching on, before the first pulse.
-  NumberField {
+  WheelNumberField {
     label: "Start delay (s), 0 to start at once"
     from: 0
     to: Model.MAXIMUM_DELAY_SECONDS
