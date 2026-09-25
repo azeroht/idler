@@ -22,7 +22,7 @@ the action and the interval.
   <img src="docs/screenshots/settings-panel.png" alt="Idler settings panel above the bar" width="325">
 </p>
 
-| Running (green icon)                                         | Stopped                                                     |
+| Running (green icon)                                        | Stopped                                                     |
 |-------------------------------------------------------------|-------------------------------------------------------------|
 | ![Bar with Idler running](docs/screenshots/bar-running.png) | ![Bar with Idler stopped](docs/screenshots/bar-stopped.png) |
 
