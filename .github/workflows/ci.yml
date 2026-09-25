@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  test:
+    name: Lint and test
+    # Self-hosted runner on ns3047575, isolated in a container.
+    runs-on: [self-hosted, linux, x64]
+    container:
+      image: node:22-bookworm
+      env:
+        LANG: C.UTF-8
+      options: --init
+    steps:
+      - name: Install the tools
+        run: |
+          apt-get update -qq
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git make shellcheck >/dev/null
+      - uses: actions/checkout@v4
+      - name: Lint
+        run: make lint
+      - name: Test
+        run: make test
