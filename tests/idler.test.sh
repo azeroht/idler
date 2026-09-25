@@ -54,6 +54,26 @@ reset_stubs "0, 0"
 expect "exit code" "$?" "0"
 expect "presses the key with wtype" "$(cat "$LOG")" "wtype -k F15"
 
+reset_stubs "0, 0"
+"$SCRIPT" key F15 0
+expect "a zero hold is a plain tap" "$(cat "$LOG")" "wtype -k F15"
+
+reset_stubs "0, 0"
+"$SCRIPT" key Shift_L 500
+expect "exit code with a hold" "$?" "0"
+expect "holds the key, then releases it" "$(cat "$LOG")" "wtype -P Shift_L -s 500 -p Shift_L"
+
+reset_stubs "0, 0"
+"$SCRIPT" key F15 10000
+expect "accepts the maximum hold" "$(cat "$LOG")" "wtype -P F15 -s 10000 -p F15"
+
+for hold in '10001' '-1' '5;id' '1.5' ''; do
+  reset_stubs "0, 0"
+  "$SCRIPT" key F15 "$hold"
+  expect "refuses invalid hold [$hold]" "$?" "1"
+  expect "  and runs nothing" "$(cat "$LOG")" ""
+done
+
 for keysym in 'F15;rm' '-k' 'F 15' '$(id)' ''; do
   reset_stubs "0, 0"
   "$SCRIPT" key "$keysym"

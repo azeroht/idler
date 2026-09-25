@@ -14,10 +14,21 @@ var UNITS = { ms: 1, s: 1000 }
 // Floor against an event flood: at most ten pulses per second.
 var MINIMUM_MILLISECONDS = 100
 var MAXIMUM_INTERVAL = 86400
+// How long a key stays down on each pulse; 0 is a plain tap.
+var MAXIMUM_HOLD_MILLISECONDS = 10000
+// Wait after switching on, before the first pulse; 0 starts at once.
+var MAXIMUM_DELAY_SECONDS = 3600
 var KEYSYM_MAXIMUM_LENGTH = 32
-var DEFAULTS = { enabled: false, action: "F15", interval: 30, unit: "s" }
+// Mouse wheel on a number: one step per notch, ten steps with Shift held.
+var WHEEL_NOTCH = 120
+var FAST_WHEEL_FACTOR = 10
+var DEFAULTS = { enabled: false, action: "F15", interval: 30, unit: "s", hold: 0, delay: 0 }
 
 var KEYSYM_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
+var DIGITS = "0123456789"
+// Thousands separators a locale may print in a number field (French uses
+// the narrow no-break space).
+var GROUP_SEPARATORS = " ,.'\u00a0\u202f"
 
 // An X11 keysym (F15, Shift_L, space...): letters, digits and underscores
 // only, so it can never pass for an option or a command.
@@ -43,15 +54,35 @@ function parse(text) {
   }
 }
 
+// A whole number within bounds, or the fallback.
+function integerInRange(value, bounds, fallback) {
+  var number = Math.round(Number(value))
+  return number >= bounds.minimum && number <= bounds.maximum ? number : fallback
+}
+
+// The whole number typed in a number field, or null while the text is not
+// one yet (empty, a stray character, out of bounds).
+function typedValue(text, bounds) {
+  var digits = ""
+  var source = String(text)
+  for (var index = 0; index < source.length; index++) {
+    if (DIGITS.indexOf(source[index]) >= 0) digits += source[index]
+    else if (GROUP_SEPARATORS.indexOf(source[index]) < 0) return null
+  }
+  if (digits.length === 0) return null
+  return integerInRange(digits, bounds, null)
+}
+
 // A complete and safe state, whatever was read from disk.
 function normalize(raw) {
   var source = raw || {}
-  var interval = Math.round(Number(source.interval))
   return {
     enabled: source.enabled === true,
     action: isValidAction(source.action) ? source.action : DEFAULTS.action,
-    interval: interval >= 1 && interval <= MAXIMUM_INTERVAL ? interval : DEFAULTS.interval,
-    unit: UNITS[source.unit] !== undefined ? source.unit : DEFAULTS.unit
+    interval: integerInRange(source.interval, { minimum: 1, maximum: MAXIMUM_INTERVAL }, DEFAULTS.interval),
+    unit: UNITS[source.unit] !== undefined ? source.unit : DEFAULTS.unit,
+    hold: integerInRange(source.hold, { minimum: 0, maximum: MAXIMUM_HOLD_MILLISECONDS }, DEFAULTS.hold),
+    delay: integerInRange(source.delay, { minimum: 0, maximum: MAXIMUM_DELAY_SECONDS }, DEFAULTS.delay)
   }
 }
 
@@ -74,10 +105,28 @@ function actionLabel(action) {
   return action
 }
 
-function describe(state) {
-  return actionLabel(state.action) + " every " + state.interval + " " + state.unit
+// The value after a wheel move of `scroll.notches` (negative goes down),
+// kept within scroll.minimum and scroll.maximum.
+function scrolled(value, scroll) {
+  var step = scroll.step * (scroll.isFast ? FAST_WHEEL_FACTOR : 1)
+  return Math.min(scroll.maximum, Math.max(scroll.minimum, value + scroll.notches * step))
 }
 
-function command(scriptPath, action) {
-  return action === MOUSE ? [scriptPath, MOUSE] : [scriptPath, "key", action]
+function delayMilliseconds(state) {
+  return state.delay * UNITS.s
+}
+
+// The key never stays down longer than the interval, so pulses never overlap.
+function holdMilliseconds(state) {
+  return Math.min(state.hold, intervalMilliseconds(state))
+}
+
+function describe(state) {
+  var held = state.action !== MOUSE && state.hold > 0 ? " held " + state.hold + " ms" : ""
+  return actionLabel(state.action) + held + " every " + state.interval + " " + state.unit
+}
+
+function command(scriptPath, state) {
+  if (state.action === MOUSE) return [scriptPath, MOUSE]
+  return [scriptPath, "key", state.action, String(holdMilliseconds(state))]
 }

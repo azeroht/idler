@@ -11,6 +11,8 @@ const SCRIPT_PATH = "/plugins/azeroht.idler/idler.sh";
 const ONE_SECOND = 1000;
 const THIRTY = 30;
 const OVER_MAXIMUM_LENGTH = 33;
+const HALF_SECOND = 500;
+const TEN = 10;
 
 function loadModel() {
   const source = readFileSync(MODEL_PATH, "utf8").replace(/^\.pragma library\s*$/m, "");
@@ -22,9 +24,9 @@ function loadModel() {
 
 const Model = loadModel();
 
-test("defaults: F15 every 30 s, stopped", () => {
+test("defaults: F15 tapped every 30 s, stopped", () => {
   // ASSERT
-  assert.deepEqual({ ...Model.DEFAULTS }, { enabled: false, action: "F15", interval: THIRTY, unit: "s" });
+  assert.deepEqual({ ...Model.DEFAULTS }, { enabled: false, action: "F15", interval: THIRTY, unit: "s", hold: 0, delay: 0 });
 });
 
 test.describe("isKeysym", () => {
@@ -51,10 +53,39 @@ test.describe("isKeysym", () => {
   }
 });
 
+test.describe("typedValue", () => {
+  const BOUNDS = { minimum: 1, maximum: 86400 };
+
+  for (const [label, text, expected] of [
+    ["a plain number", "30", 30],
+    ["a comma thousands separator", "1,000", 1000],
+    ["a French narrow no-break space", "1\u202f000", 1000],
+    ["the maximum", "86400", 86400],
+  ]) {
+    test(`reads ${label}`, () => {
+      // ASSERT
+      assert.equal(Model.typedValue(text, BOUNDS), expected);
+    });
+  }
+
+  for (const [label, text] of [
+    ["an empty field", ""],
+    ["a letter", "3a"],
+    ["a minus sign", "-5"],
+    ["a value under the minimum", "0"],
+    ["a value over the maximum", "86401"],
+  ]) {
+    test(`waits on ${label}`, () => {
+      // ASSERT
+      assert.equal(Model.typedValue(text, BOUNDS), null);
+    });
+  }
+});
+
 test.describe("normalize", () => {
   test("keeps a valid state", () => {
     // ARRANGE
-    const state = { enabled: true, action: "mouse", interval: 250, unit: "ms" };
+    const state = { enabled: true, action: "mouse", interval: 250, unit: "ms", hold: HALF_SECOND, delay: TEN };
 
     // ACT
     const result = Model.normalize(state);
@@ -73,6 +104,12 @@ test.describe("normalize", () => {
     ["an interval over a day", { interval: 86401 }],
     ["a non-numeric interval", { interval: "soon" }],
     ["an unknown unit", { unit: "min" }],
+    ["a negative hold", { hold: -1 }],
+    ["a hold over the maximum", { hold: Model.MAXIMUM_HOLD_MILLISECONDS + 1 }],
+    ["a non-numeric hold", { hold: "long" }],
+    ["a negative delay", { delay: -1 }],
+    ["a delay over the maximum", { delay: Model.MAXIMUM_DELAY_SECONDS + 1 }],
+    ["a non-numeric delay", { delay: "later" }],
   ]) {
     test(`falls back to defaults for ${label}`, () => {
       // ACT
@@ -126,6 +163,60 @@ test.describe("intervalMilliseconds", () => {
   });
 });
 
+test.describe("scrolled", () => {
+  const BOUNDS = { minimum: 0, maximum: 100, step: 1 };
+
+  for (const [label, scroll, expected] of [
+    ["one notch up adds a step", { notches: 1, isFast: false }, 51],
+    ["one notch down takes a step", { notches: -1, isFast: false }, 49],
+    ["Shift adds ten steps", { notches: 1, isFast: true }, 60],
+    ["Shift takes ten steps", { notches: -1, isFast: true }, 40],
+    ["several notches add up", { notches: 3, isFast: false }, 53],
+    ["never goes over the maximum", { notches: 6, isFast: true }, 100],
+    ["never goes under the minimum", { notches: -6, isFast: true }, 0],
+  ]) {
+    test(label, () => {
+      // ACT
+      const result = Model.scrolled(50, { ...BOUNDS, ...scroll });
+
+      // ASSERT
+      assert.equal(result, expected);
+    });
+  }
+
+  test("scales with the field step", () => {
+    // ACT
+    const result = Model.scrolled(HALF_SECOND, { minimum: 0, maximum: Model.MAXIMUM_HOLD_MILLISECONDS, step: 100, notches: 1, isFast: true });
+
+    // ASSERT
+    assert.equal(result, HALF_SECOND + ONE_SECOND);
+  });
+});
+
+test.describe("delayMilliseconds", () => {
+  test("converts the delay from seconds", () => {
+    // ASSERT
+    assert.equal(Model.delayMilliseconds({ delay: TEN }), TEN * ONE_SECOND);
+  });
+
+  test("keeps no delay at zero", () => {
+    // ASSERT
+    assert.equal(Model.delayMilliseconds({ delay: 0 }), 0);
+  });
+});
+
+test.describe("holdMilliseconds", () => {
+  test("keeps a hold shorter than the interval", () => {
+    // ASSERT
+    assert.equal(Model.holdMilliseconds({ interval: THIRTY, unit: "s", hold: HALF_SECOND }), HALF_SECOND);
+  });
+
+  test("never outlasts the interval", () => {
+    // ASSERT
+    assert.equal(Model.holdMilliseconds({ interval: 200, unit: "ms", hold: HALF_SECOND }), 200);
+  });
+});
+
 test.describe("isPreset", () => {
   for (const action of ["F15", "F13", "Shift_L", "mouse"]) {
     test(`recognizes the preset ${action}`, () => {
@@ -146,6 +237,16 @@ test.describe("describe and actionLabel", () => {
     assert.equal(Model.describe({ action: "mouse", interval: 5, unit: "s" }), "Mouse 1 px every 5 s");
   });
 
+  test("mentions the hold of a key", () => {
+    // ASSERT
+    assert.equal(Model.describe({ action: "F15", interval: 5, unit: "s", hold: HALF_SECOND }), "F15 held 500 ms every 5 s");
+  });
+
+  test("ignores the hold for the mouse", () => {
+    // ASSERT
+    assert.equal(Model.describe({ action: "mouse", interval: 5, unit: "s", hold: HALF_SECOND }), "Mouse 1 px every 5 s");
+  });
+
   test("falls back to the keysym for a free key", () => {
     // ASSERT
     assert.equal(Model.actionLabel("Scroll_Lock"), "Scroll_Lock");
@@ -155,11 +256,22 @@ test.describe("describe and actionLabel", () => {
 test.describe("command", () => {
   test("nudges the mouse", () => {
     // ASSERT
-    assert.deepEqual([...Model.command(SCRIPT_PATH, "mouse")], [SCRIPT_PATH, "mouse"]);
+    assert.deepEqual([...Model.command(SCRIPT_PATH, { action: "mouse", hold: HALF_SECOND })], [SCRIPT_PATH, "mouse"]);
   });
 
-  test("presses a key", () => {
+  test("taps a key", () => {
+    // ARRANGE
+    const state = { action: "F15", interval: THIRTY, unit: "s", hold: 0 };
+
     // ASSERT
-    assert.deepEqual([...Model.command(SCRIPT_PATH, "F15")], [SCRIPT_PATH, "key", "F15"]);
+    assert.deepEqual([...Model.command(SCRIPT_PATH, state)], [SCRIPT_PATH, "key", "F15", "0"]);
+  });
+
+  test("holds a key", () => {
+    // ARRANGE
+    const state = { action: "Shift_L", interval: THIRTY, unit: "s", hold: HALF_SECOND };
+
+    // ASSERT
+    assert.deepEqual([...Model.command(SCRIPT_PATH, state)], [SCRIPT_PATH, "key", "Shift_L", "500"]);
   });
 });

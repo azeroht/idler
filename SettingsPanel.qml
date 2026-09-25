@@ -4,8 +4,11 @@ import qs.Ui
 import "Model.js" as Model
 
 // Idler settings, styled like the native panels: on / off, the repeated
-// action (preset keys, a free key or the mouse) and the interval with its
-// unit. Every choice goes up through changed() and applies at once.
+// action (preset keys, a free key or the mouse) with how long a key is held,
+// the interval with its unit, and the delay before the first pulse. Every
+// choice goes up through changed() and applies at once. A number applies as
+// soon as it is typed, and follows the mouse wheel: one step per notch, ten
+// with Shift held.
 Column {
   id: panel
   property var state: Model.DEFAULTS
@@ -20,6 +23,41 @@ Column {
     fontSize: Style.font.bodySmall
     foreground: panel.foreground
     bordered: true
+  }
+
+  component LiveNumberField: NumberField {
+    id: liveField
+    // Angle left over from a touchpad, until it makes a whole notch.
+    property real wheelRest: 0
+
+    WheelHandler {
+      onWheel: function(event) {
+        const delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x
+        liveField.wheelRest += delta
+        const notches = Math.trunc(liveField.wheelRest / Model.WHEEL_NOTCH)
+        if (notches === 0) return
+        liveField.wheelRest -= notches * Model.WHEEL_NOTCH
+        const next = Model.scrolled(liveField.value, {
+          notches: notches,
+          isFast: (event.modifiers & Qt.ShiftModifier) !== 0,
+          step: liveField.stepSize,
+          minimum: liveField.from,
+          maximum: liveField.to
+        })
+        if (next !== liveField.value) liveField.modified(next)
+      }
+    }
+
+    // A SpinBox only commits on Enter or focus loss: apply every whole
+    // number within bounds as it is typed.
+    Connections {
+      target: liveField.field.contentItem
+      function onTextEdited() {
+        const bounds = { minimum: liveField.from, maximum: liveField.to }
+        const typed = Model.typedValue(liveField.field.contentItem.text, bounds)
+        if (typed !== null && typed !== liveField.value) liveField.modified(typed)
+      }
+    }
   }
 
   PanelHero {
@@ -78,6 +116,19 @@ Column {
     onAccepted: if (Model.isKeysym(text)) panel.changed({ action: text })
   }
 
+  // Hold: how long the key stays down on each pulse, 0 for a plain tap.
+  LiveNumberField {
+    visible: panel.state.action !== Model.MOUSE
+    label: "Hold (ms): 0 = tap, 500 = half a second"
+    from: 0
+    to: Model.MAXIMUM_HOLD_MILLISECONDS
+    stepSize: 100
+    value: panel.state.hold
+    foreground: panel.foreground
+    fontSize: Style.font.bodySmall
+    onModified: function(value) { panel.changed({ hold: value }) }
+  }
+
   PanelSeparator { foreground: panel.foreground }
 
   PanelSectionHeader { text: "INTERVAL"; foreground: panel.foreground; fontSize: Style.font.bodySmall }
@@ -87,7 +138,7 @@ Column {
     width: parent.width
     spacing: Style.space(6)
 
-    NumberField {
+    LiveNumberField {
       id: amount
       anchors.verticalCenter: parent.verticalCenter
       from: 1
@@ -110,6 +161,17 @@ Column {
         onClicked: panel.changed({ unit: modelData })
       }
     }
+  }
+
+  // Start delay: wait after switching on, before the first pulse.
+  LiveNumberField {
+    label: "Start delay (s), 0 to start at once"
+    from: 0
+    to: Model.MAXIMUM_DELAY_SECONDS
+    value: panel.state.delay
+    foreground: panel.foreground
+    fontSize: Style.font.bodySmall
+    onModified: function(value) { panel.changed({ delay: value }) }
   }
 
   Text {

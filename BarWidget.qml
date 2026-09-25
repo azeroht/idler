@@ -8,8 +8,9 @@ import "Model.js" as Model
 
 // Idler: simulated activity (a key press or a one-pixel cursor nudge) at the
 // chosen interval, to keep the session and chat statuses active.
-// Left click: start / stop. Right click: settings.
-// The state (running, action, interval) survives shell restarts in
+// Left click: start / stop. Right click: settings. Once switched on, the
+// first pulse waits for the start delay, then one follows every interval.
+// The state (running, action, interval, delay) survives shell restarts in
 // ~/.local/state/azeroht-idler.json. Every monitor has its own bar, hence its
 // own instance of this widget: they all follow that file, and only the
 // instance on the first screen sends the pulses, so there is never two.
@@ -19,6 +20,9 @@ BarWidget {
 
   property var state: Model.DEFAULTS
   property bool popupOpen: false
+  readonly property bool isOn: state.enabled
+  // False from switching on until the start delay has run out.
+  property bool isDelayOver: false
   readonly property string scriptPath: String(Qt.resolvedUrl("idler.sh")).replace("file://", "")
   readonly property bool sendsPulses: {
     const window = root.QsWindow.window
@@ -41,6 +45,12 @@ BarWidget {
   function update(changes) {
     state = Model.normalize(Object.assign({}, state, changes))
     stateFile.setText(JSON.stringify(state, null, 2) + "\n")
+  }
+
+  onIsOnChanged: {
+    startDelay.stop()
+    isDelayOver = isOn && state.delay === 0
+    if (isOn && !isDelayOver) startDelay.start()
   }
 
   implicitWidth: button.implicitWidth
@@ -67,10 +77,17 @@ BarWidget {
   }
 
   Timer {
+    id: startDelay
+    interval: Model.delayMilliseconds(root.state)
+    onTriggered: root.isDelayOver = true
+  }
+
+  Timer {
     interval: Model.intervalMilliseconds(root.state)
-    running: root.state.enabled && root.sendsPulses
+    running: root.isOn && root.isDelayOver && root.sendsPulses
     repeat: true
-    onTriggered: Quickshell.execDetached(Model.command(root.scriptPath, root.state.action))
+    triggeredOnStart: true
+    onTriggered: Quickshell.execDetached(Model.command(root.scriptPath, root.state))
   }
 
   BarIconButton {
@@ -79,15 +96,19 @@ BarWidget {
     bar: root.bar
     // Nerd Font: mouse.
     text: "\u{f037d}"
-    active: root.state.enabled
-    tooltipText: root.state.enabled ? "Idler: " + Model.describe(root.state) : "Idler: off"
+    active: root.isOn
+    tooltipText: {
+      if (!root.isOn) return "Idler: off"
+      if (!root.isDelayOver) return "Idler: starts after " + root.state.delay + " s"
+      return "Idler: " + Model.describe(root.state)
+    }
     onPressed: function(mouseButton) {
       if (mouseButton === Qt.RightButton) root.popupOpen = !root.popupOpen
       else root.update({ enabled: !root.state.enabled })
     }
   }
 
-  PopupCard {
+  KeyboardPanel {
     id: popup
     anchorItem: root
     bar: root.bar
