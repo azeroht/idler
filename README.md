@@ -73,7 +73,7 @@ To pin a reviewed version rather than following `main`, clone a tag into
 `~/.config/omarchy/plugins/azeroht.idler`, then rescan the plugins:
 
 ```bash
-git clone --branch v0.2.0 https://github.com/azeroht/idler.git ~/.config/omarchy/plugins/azeroht.idler
+git clone --branch v0.2.1 https://github.com/azeroht/idler.git ~/.config/omarchy/plugins/azeroht.idler
 omarchy-shell shell rescanPlugins
 omarchy plugin enable azeroht.idler
 ```
