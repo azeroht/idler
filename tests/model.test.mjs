@@ -12,6 +12,7 @@ const ONE_SECOND = 1000;
 const THIRTY = 30;
 const OVER_MAXIMUM_LENGTH = 33;
 const HALF_SECOND = 500;
+const TEN = 10;
 
 function loadModel() {
   const source = readFileSync(MODEL_PATH, "utf8").replace(/^\.pragma library\s*$/m, "");
@@ -25,7 +26,7 @@ const Model = loadModel();
 
 test("defaults: F15 tapped every 30 s, stopped", () => {
   // ASSERT
-  assert.deepEqual({ ...Model.DEFAULTS }, { enabled: false, action: "F15", interval: THIRTY, unit: "s", hold: 0 });
+  assert.deepEqual({ ...Model.DEFAULTS }, { enabled: false, action: "F15", interval: THIRTY, unit: "s", hold: 0, delay: 0 });
 });
 
 test.describe("isKeysym", () => {
@@ -55,7 +56,7 @@ test.describe("isKeysym", () => {
 test.describe("normalize", () => {
   test("keeps a valid state", () => {
     // ARRANGE
-    const state = { enabled: true, action: "mouse", interval: 250, unit: "ms", hold: HALF_SECOND };
+    const state = { enabled: true, action: "mouse", interval: 250, unit: "ms", hold: HALF_SECOND, delay: TEN };
 
     // ACT
     const result = Model.normalize(state);
@@ -77,6 +78,9 @@ test.describe("normalize", () => {
     ["a negative hold", { hold: -1 }],
     ["a hold over the maximum", { hold: Model.MAXIMUM_HOLD_MILLISECONDS + 1 }],
     ["a non-numeric hold", { hold: "long" }],
+    ["a negative delay", { delay: -1 }],
+    ["a delay over the maximum", { delay: Model.MAXIMUM_DELAY_SECONDS + 1 }],
+    ["a non-numeric delay", { delay: "later" }],
   ]) {
     test(`falls back to defaults for ${label}`, () => {
       // ACT
@@ -127,6 +131,18 @@ test.describe("intervalMilliseconds", () => {
   test("never goes under the 100 ms floor", () => {
     // ASSERT
     assert.equal(Model.intervalMilliseconds({ interval: 1, unit: "ms" }), Model.MINIMUM_MILLISECONDS);
+  });
+});
+
+test.describe("delayMilliseconds", () => {
+  test("converts the delay from seconds", () => {
+    // ASSERT
+    assert.equal(Model.delayMilliseconds({ delay: TEN }), TEN * ONE_SECOND);
+  });
+
+  test("keeps no delay at zero", () => {
+    // ASSERT
+    assert.equal(Model.delayMilliseconds({ delay: 0 }), 0);
   });
 });
 

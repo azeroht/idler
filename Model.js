@@ -16,8 +16,10 @@ var MINIMUM_MILLISECONDS = 100
 var MAXIMUM_INTERVAL = 86400
 // How long a key stays down on each pulse; 0 is a plain tap.
 var MAXIMUM_HOLD_MILLISECONDS = 10000
+// Wait after switching on, before the first pulse; 0 starts at once.
+var MAXIMUM_DELAY_SECONDS = 3600
 var KEYSYM_MAXIMUM_LENGTH = 32
-var DEFAULTS = { enabled: false, action: "F15", interval: 30, unit: "s", hold: 0 }
+var DEFAULTS = { enabled: false, action: "F15", interval: 30, unit: "s", hold: 0, delay: 0 }
 
 var KEYSYM_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
 
@@ -59,7 +61,8 @@ function normalize(raw) {
     action: isValidAction(source.action) ? source.action : DEFAULTS.action,
     interval: integerInRange(source.interval, { minimum: 1, maximum: MAXIMUM_INTERVAL }, DEFAULTS.interval),
     unit: UNITS[source.unit] !== undefined ? source.unit : DEFAULTS.unit,
-    hold: integerInRange(source.hold, { minimum: 0, maximum: MAXIMUM_HOLD_MILLISECONDS }, DEFAULTS.hold)
+    hold: integerInRange(source.hold, { minimum: 0, maximum: MAXIMUM_HOLD_MILLISECONDS }, DEFAULTS.hold),
+    delay: integerInRange(source.delay, { minimum: 0, maximum: MAXIMUM_DELAY_SECONDS }, DEFAULTS.delay)
   }
 }
 
@@ -80,6 +83,10 @@ function actionLabel(action) {
     if (ACTIONS[index].id === action) return ACTIONS[index].label
   }
   return action
+}
+
+function delayMilliseconds(state) {
+  return state.delay * UNITS.s
 }
 
 // The key never stays down longer than the interval, so pulses never overlap.
