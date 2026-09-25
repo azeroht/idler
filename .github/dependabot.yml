@@ -1,0 +1,13 @@
+# Keeps the actions used by the CI up to date. The plugin has no package
+# dependency, so GitHub Actions is the only ecosystem to watch.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    # Gives "⬆️ build(deps): bump ..." subjects, close to the gitmoji convention.
+    commit-message:
+      prefix: "⬆️ build"
+      include: scope
