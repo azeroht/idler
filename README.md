@@ -68,10 +68,24 @@ To pin a reviewed version rather than following `main`, clone a tag into
 `~/.config/omarchy/plugins/azeroht.idler`, then rescan the plugins:
 
 ```bash
-git clone --branch v0.1.0 https://github.com/azeroht/idler.git ~/.config/omarchy/plugins/azeroht.idler
+git clone --branch v0.1.1 https://github.com/azeroht/idler.git ~/.config/omarchy/plugins/azeroht.idler
 omarchy-shell shell rescanPlugins
 omarchy plugin enable azeroht.idler
 ```
+
+## 🗑️ Uninstall
+
+Stop Idler first, so no pulse is left running, then remove the plugin and its state file:
+
+```bash
+omarchy-shell azeroht.idler stop
+omarchy plugin remove azeroht.idler
+rm -f ~/.local/state/azeroht-idler.json
+```
+
+`omarchy plugin remove` takes the widget out of the bar and deletes the plugin folder. Idler
+writes nothing else: no configuration file of yours is touched. If you added a keybinding that
+calls `omarchy-shell azeroht.idler`, remove it from `~/.config/hypr/bindings.lua` too.
 
 ## 🖱️ Usage
 
