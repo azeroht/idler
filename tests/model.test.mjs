@@ -53,6 +53,35 @@ test.describe("isKeysym", () => {
   }
 });
 
+test.describe("typedValue", () => {
+  const BOUNDS = { minimum: 1, maximum: 86400 };
+
+  for (const [label, text, expected] of [
+    ["a plain number", "30", 30],
+    ["a comma thousands separator", "1,000", 1000],
+    ["a French narrow no-break space", "1\u202f000", 1000],
+    ["the maximum", "86400", 86400],
+  ]) {
+    test(`reads ${label}`, () => {
+      // ASSERT
+      assert.equal(Model.typedValue(text, BOUNDS), expected);
+    });
+  }
+
+  for (const [label, text] of [
+    ["an empty field", ""],
+    ["a letter", "3a"],
+    ["a minus sign", "-5"],
+    ["a value under the minimum", "0"],
+    ["a value over the maximum", "86401"],
+  ]) {
+    test(`waits on ${label}`, () => {
+      // ASSERT
+      assert.equal(Model.typedValue(text, BOUNDS), null);
+    });
+  }
+});
+
 test.describe("normalize", () => {
   test("keeps a valid state", () => {
     // ARRANGE
