@@ -14,8 +14,12 @@ var UNITS = { ms: 1, s: 1000 }
 // Floor against an event flood: at most ten pulses per second.
 var MINIMUM_MILLISECONDS = 100
 var MAXIMUM_INTERVAL = 86400
+// How long a key stays down on each pulse; 0 is a plain tap.
+var MAXIMUM_HOLD_MILLISECONDS = 10000
+// Wait after switching on, before the first pulse; 0 starts at once.
+var MAXIMUM_DELAY_SECONDS = 3600
 var KEYSYM_MAXIMUM_LENGTH = 32
-var DEFAULTS = { enabled: false, action: "F15", interval: 30, unit: "s" }
+var DEFAULTS = { enabled: false, action: "F15", interval: 30, unit: "s", hold: 0, delay: 0 }
 
 var KEYSYM_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
 
@@ -43,15 +47,22 @@ function parse(text) {
   }
 }
 
+// A whole number within bounds, or the fallback.
+function integerInRange(value, bounds, fallback) {
+  var number = Math.round(Number(value))
+  return number >= bounds.minimum && number <= bounds.maximum ? number : fallback
+}
+
 // A complete and safe state, whatever was read from disk.
 function normalize(raw) {
   var source = raw || {}
-  var interval = Math.round(Number(source.interval))
   return {
     enabled: source.enabled === true,
     action: isValidAction(source.action) ? source.action : DEFAULTS.action,
-    interval: interval >= 1 && interval <= MAXIMUM_INTERVAL ? interval : DEFAULTS.interval,
-    unit: UNITS[source.unit] !== undefined ? source.unit : DEFAULTS.unit
+    interval: integerInRange(source.interval, { minimum: 1, maximum: MAXIMUM_INTERVAL }, DEFAULTS.interval),
+    unit: UNITS[source.unit] !== undefined ? source.unit : DEFAULTS.unit,
+    hold: integerInRange(source.hold, { minimum: 0, maximum: MAXIMUM_HOLD_MILLISECONDS }, DEFAULTS.hold),
+    delay: integerInRange(source.delay, { minimum: 0, maximum: MAXIMUM_DELAY_SECONDS }, DEFAULTS.delay)
   }
 }
 
@@ -74,10 +85,21 @@ function actionLabel(action) {
   return action
 }
 
-function describe(state) {
-  return actionLabel(state.action) + " every " + state.interval + " " + state.unit
+function delayMilliseconds(state) {
+  return state.delay * UNITS.s
 }
 
-function command(scriptPath, action) {
-  return action === MOUSE ? [scriptPath, MOUSE] : [scriptPath, "key", action]
+// The key never stays down longer than the interval, so pulses never overlap.
+function holdMilliseconds(state) {
+  return Math.min(state.hold, intervalMilliseconds(state))
+}
+
+function describe(state) {
+  var held = state.action !== MOUSE && state.hold > 0 ? " held " + state.hold + " ms" : ""
+  return actionLabel(state.action) + held + " every " + state.interval + " " + state.unit
+}
+
+function command(scriptPath, state) {
+  if (state.action === MOUSE) return [scriptPath, MOUSE]
+  return [scriptPath, "key", state.action, String(holdMilliseconds(state))]
 }

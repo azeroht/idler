@@ -4,8 +4,9 @@ import qs.Ui
 import "Model.js" as Model
 
 // Idler settings, styled like the native panels: on / off, the repeated
-// action (preset keys, a free key or the mouse) and the interval with its
-// unit. Every choice goes up through changed() and applies at once.
+// action (preset keys, a free key or the mouse) with how long a key is held,
+// the interval with its unit, and the delay before the first pulse. Every
+// choice goes up through changed() and applies at once.
 Column {
   id: panel
   property var state: Model.DEFAULTS
@@ -78,6 +79,19 @@ Column {
     onAccepted: if (Model.isKeysym(text)) panel.changed({ action: text })
   }
 
+  // Hold: how long the key stays down on each pulse, 0 for a plain tap.
+  NumberField {
+    visible: panel.state.action !== Model.MOUSE
+    label: "Hold (ms), 0 for a tap"
+    from: 0
+    to: Model.MAXIMUM_HOLD_MILLISECONDS
+    stepSize: 100
+    value: panel.state.hold
+    foreground: panel.foreground
+    fontSize: Style.font.bodySmall
+    onModified: function(value) { panel.changed({ hold: value }) }
+  }
+
   PanelSeparator { foreground: panel.foreground }
 
   PanelSectionHeader { text: "INTERVAL"; foreground: panel.foreground; fontSize: Style.font.bodySmall }
@@ -110,6 +124,17 @@ Column {
         onClicked: panel.changed({ unit: modelData })
       }
     }
+  }
+
+  // Start delay: wait after switching on, before the first pulse.
+  NumberField {
+    label: "Start delay (s), 0 to start at once"
+    from: 0
+    to: Model.MAXIMUM_DELAY_SECONDS
+    value: panel.state.delay
+    foreground: panel.foreground
+    fontSize: Style.font.bodySmall
+    onModified: function(value) { panel.changed({ delay: value }) }
   }
 
   Text {
