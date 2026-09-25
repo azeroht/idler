@@ -5,11 +5,13 @@ on:
     branches: [main, develop]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Lint and test
-    # Self-hosted runner on ns3047575, isolated in a container.
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     container:
       image: node:22-bookworm
       env:
