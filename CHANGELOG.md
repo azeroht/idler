@@ -6,7 +6,7 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-## [0.2.0-rc.1] - 2026-09-26
+## [0.2.0] - 2026-09-26
 
 ### ✨ Features
 
