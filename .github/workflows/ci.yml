@@ -5,10 +5,13 @@ on:
     branches: [main, develop]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Lint and test
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     container:
       image: node:22-bookworm
       env:
