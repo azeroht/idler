@@ -11,6 +11,7 @@ const SCRIPT_PATH = "/plugins/azeroht.idler/idler.sh";
 const ONE_SECOND = 1000;
 const THIRTY = 30;
 const OVER_MAXIMUM_LENGTH = 33;
+const HALF_SECOND = 500;
 
 function loadModel() {
   const source = readFileSync(MODEL_PATH, "utf8").replace(/^\.pragma library\s*$/m, "");
@@ -22,9 +23,9 @@ function loadModel() {
 
 const Model = loadModel();
 
-test("defaults: F15 every 30 s, stopped", () => {
+test("defaults: F15 tapped every 30 s, stopped", () => {
   // ASSERT
-  assert.deepEqual({ ...Model.DEFAULTS }, { enabled: false, action: "F15", interval: THIRTY, unit: "s" });
+  assert.deepEqual({ ...Model.DEFAULTS }, { enabled: false, action: "F15", interval: THIRTY, unit: "s", hold: 0 });
 });
 
 test.describe("isKeysym", () => {
@@ -54,7 +55,7 @@ test.describe("isKeysym", () => {
 test.describe("normalize", () => {
   test("keeps a valid state", () => {
     // ARRANGE
-    const state = { enabled: true, action: "mouse", interval: 250, unit: "ms" };
+    const state = { enabled: true, action: "mouse", interval: 250, unit: "ms", hold: HALF_SECOND };
 
     // ACT
     const result = Model.normalize(state);
@@ -73,6 +74,9 @@ test.describe("normalize", () => {
     ["an interval over a day", { interval: 86401 }],
     ["a non-numeric interval", { interval: "soon" }],
     ["an unknown unit", { unit: "min" }],
+    ["a negative hold", { hold: -1 }],
+    ["a hold over the maximum", { hold: Model.MAXIMUM_HOLD_MILLISECONDS + 1 }],
+    ["a non-numeric hold", { hold: "long" }],
   ]) {
     test(`falls back to defaults for ${label}`, () => {
       // ACT
@@ -126,6 +130,18 @@ test.describe("intervalMilliseconds", () => {
   });
 });
 
+test.describe("holdMilliseconds", () => {
+  test("keeps a hold shorter than the interval", () => {
+    // ASSERT
+    assert.equal(Model.holdMilliseconds({ interval: THIRTY, unit: "s", hold: HALF_SECOND }), HALF_SECOND);
+  });
+
+  test("never outlasts the interval", () => {
+    // ASSERT
+    assert.equal(Model.holdMilliseconds({ interval: 200, unit: "ms", hold: HALF_SECOND }), 200);
+  });
+});
+
 test.describe("isPreset", () => {
   for (const action of ["F15", "F13", "Shift_L", "mouse"]) {
     test(`recognizes the preset ${action}`, () => {
@@ -146,6 +162,16 @@ test.describe("describe and actionLabel", () => {
     assert.equal(Model.describe({ action: "mouse", interval: 5, unit: "s" }), "Mouse 1 px every 5 s");
   });
 
+  test("mentions the hold of a key", () => {
+    // ASSERT
+    assert.equal(Model.describe({ action: "F15", interval: 5, unit: "s", hold: HALF_SECOND }), "F15 held 500 ms every 5 s");
+  });
+
+  test("ignores the hold for the mouse", () => {
+    // ASSERT
+    assert.equal(Model.describe({ action: "mouse", interval: 5, unit: "s", hold: HALF_SECOND }), "Mouse 1 px every 5 s");
+  });
+
   test("falls back to the keysym for a free key", () => {
     // ASSERT
     assert.equal(Model.actionLabel("Scroll_Lock"), "Scroll_Lock");
@@ -155,11 +181,22 @@ test.describe("describe and actionLabel", () => {
 test.describe("command", () => {
   test("nudges the mouse", () => {
     // ASSERT
-    assert.deepEqual([...Model.command(SCRIPT_PATH, "mouse")], [SCRIPT_PATH, "mouse"]);
+    assert.deepEqual([...Model.command(SCRIPT_PATH, { action: "mouse", hold: HALF_SECOND })], [SCRIPT_PATH, "mouse"]);
   });
 
-  test("presses a key", () => {
+  test("taps a key", () => {
+    // ARRANGE
+    const state = { action: "F15", interval: THIRTY, unit: "s", hold: 0 };
+
     // ASSERT
-    assert.deepEqual([...Model.command(SCRIPT_PATH, "F15")], [SCRIPT_PATH, "key", "F15"]);
+    assert.deepEqual([...Model.command(SCRIPT_PATH, state)], [SCRIPT_PATH, "key", "F15", "0"]);
+  });
+
+  test("holds a key", () => {
+    // ARRANGE
+    const state = { action: "Shift_L", interval: THIRTY, unit: "s", hold: HALF_SECOND };
+
+    // ASSERT
+    assert.deepEqual([...Model.command(SCRIPT_PATH, state)], [SCRIPT_PATH, "key", "Shift_L", "500"]);
   });
 });

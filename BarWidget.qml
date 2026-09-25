@@ -70,7 +70,7 @@ BarWidget {
     interval: Model.intervalMilliseconds(root.state)
     running: root.state.enabled && root.sendsPulses
     repeat: true
-    onTriggered: Quickshell.execDetached(Model.command(root.scriptPath, root.state.action))
+    onTriggered: Quickshell.execDetached(Model.command(root.scriptPath, root.state))
   }
 
   BarIconButton {

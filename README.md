@@ -33,6 +33,7 @@ the action and the interval.
 - **Four presets**: `F15`, `F13`, `Shift`, or `Mouse 1 px`. F13 to F15 are bound to nothing in
   most apps, which makes them invisible pulses.
 - **Any other key**: type a keysym (`Scroll_Lock`, `F20`, `space`...) and press Enter.
+- **Tap or hold**: a key is tapped by default, or held down for up to 10 s on each pulse.
 - **Any interval**, from 100 ms to a day, in milliseconds or seconds.
 - **Persistent**: the state survives shell restarts and reboots.
 - **Multi-monitor aware**: every bar shows the same state, and only one of them sends the pulses.
@@ -97,6 +98,7 @@ calls `omarchy-shell azeroht.idler`, remove it from `~/.config/hypr/bindings.lua
 | Panel switch                   | Start or stop                                          |
 | Panel preset button            | Repeat that action                                     |
 | Panel "Other key" field, Enter | Repeat that keysym (letters, digits and `_` only)      |
+| Panel hold field               | Keep the key down that long, in ms (0 for a tap)       |
 | Panel interval and unit        | Change the pace; anything under 100 ms is raised to it |
 
 Every change applies at once and is saved in `~/.local/state/azeroht-idler.json`:
@@ -106,11 +108,13 @@ Every change applies at once and is saved in `~/.local/state/azeroht-idler.json`
   "enabled": true,
   "action": "F15",
   "interval": 30,
-  "unit": "s"
+  "unit": "s",
+  "hold": 0
 }
 ```
 
-`action` is `mouse` or a keysym, `unit` is `ms` or `s`. An invalid or unreadable file falls back to
+`action` is `mouse` or a keysym, `unit` is `ms` or `s`, `hold` is in milliseconds (0 to 10000,
+ignored for the mouse and never longer than the interval). An invalid or unreadable file falls back to
 the defaults: F15 every 30 seconds, stopped.
 
 ## ⌨️ IPC
@@ -139,7 +143,7 @@ o.bind("SUPER + CTRL + I", "Toggle the idler", "omarchy-shell azeroht.idler togg
 | `BarWidget.qml`     | Bar icon, timer, state file, IPC target                            |
 | `SettingsPanel.qml` | Settings popup built from the native Omarchy UI kit                |
 | `Model.js`          | Pure logic: validation, defaults, interval maths, command building |
-| `idler.sh`          | One pulse: `wtype -k <keysym>`, or cursor +1 px then -1 px         |
+| `idler.sh`          | One pulse: a key tapped or held with `wtype`, or a 1 px nudge      |
 | `manifest.json`     | Omarchy plugin manifest                                            |
 
 - **Mouse nudge**: the cursor moves one pixel right, then 50 ms later one pixel left from wherever
@@ -153,7 +157,8 @@ o.bind("SUPER + CTRL + I", "Toggle the idler", "omarchy-shell azeroht.idler togg
 ## 🔒 Security
 
 - The keysym is checked in QML and again in `idler.sh`: letters, digits and `_` only, 32
-  characters at most. It can never become an option or a command.
+  characters at most. It can never become an option or a command. The hold is checked the same
+  way: digits only, 10000 at most.
 - Commands run as argument lists (`Quickshell.execDetached`), never through a shell string.
 - The cursor position read from Hyprland must be two integers before it is used.
 - The plugin writes a single file, its state, and makes no network access.
