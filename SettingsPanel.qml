@@ -107,7 +107,7 @@ Column {
   // Hold: how long the key stays down on each pulse, 0 for a plain tap.
   WheelNumberField {
     visible: panel.state.action !== Model.MOUSE
-    label: "Hold (ms), 0 for a tap"
+    label: "Hold (ms): 0 = tap, 500 = half a second"
     from: 0
     to: Model.MAXIMUM_HOLD_MILLISECONDS
     stepSize: 100
