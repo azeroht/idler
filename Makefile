@@ -6,7 +6,7 @@ all: lint test
 
 ## test : unit tests of the model and the package, then the pulse script
 test:
-	node --test tests/
+	node --test tests/*.test.mjs
 	./tests/idler.test.sh
 
 ## lint : shell syntax, shellcheck, JSON manifest
