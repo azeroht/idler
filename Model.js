@@ -25,6 +25,10 @@ var FAST_WHEEL_FACTOR = 10
 var DEFAULTS = { enabled: false, action: "F15", interval: 30, unit: "s", hold: 0, delay: 0 }
 
 var KEYSYM_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
+var DIGITS = "0123456789"
+// Thousands separators a locale may print in a number field (French uses
+// the narrow no-break space).
+var GROUP_SEPARATORS = " ,.'\u00a0\u202f"
 
 // An X11 keysym (F15, Shift_L, space...): letters, digits and underscores
 // only, so it can never pass for an option or a command.
@@ -54,6 +58,19 @@ function parse(text) {
 function integerInRange(value, bounds, fallback) {
   var number = Math.round(Number(value))
   return number >= bounds.minimum && number <= bounds.maximum ? number : fallback
+}
+
+// The whole number typed in a number field, or null while the text is not
+// one yet (empty, a stray character, out of bounds).
+function typedValue(text, bounds) {
+  var digits = ""
+  var source = String(text)
+  for (var index = 0; index < source.length; index++) {
+    if (DIGITS.indexOf(source[index]) >= 0) digits += source[index]
+    else if (GROUP_SEPARATORS.indexOf(source[index]) < 0) return null
+  }
+  if (digits.length === 0) return null
+  return integerInRange(digits, bounds, null)
 }
 
 // A complete and safe state, whatever was read from disk.
