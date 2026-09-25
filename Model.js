@@ -19,6 +19,9 @@ var MAXIMUM_HOLD_MILLISECONDS = 10000
 // Wait after switching on, before the first pulse; 0 starts at once.
 var MAXIMUM_DELAY_SECONDS = 3600
 var KEYSYM_MAXIMUM_LENGTH = 32
+// Mouse wheel on a number: one step per notch, ten steps with Shift held.
+var WHEEL_NOTCH = 120
+var FAST_WHEEL_FACTOR = 10
 var DEFAULTS = { enabled: false, action: "F15", interval: 30, unit: "s", hold: 0, delay: 0 }
 
 var KEYSYM_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
@@ -83,6 +86,13 @@ function actionLabel(action) {
     if (ACTIONS[index].id === action) return ACTIONS[index].label
   }
   return action
+}
+
+// The value after a wheel move of `scroll.notches` (negative goes down),
+// kept within scroll.minimum and scroll.maximum.
+function scrolled(value, scroll) {
+  var step = scroll.step * (scroll.isFast ? FAST_WHEEL_FACTOR : 1)
+  return Math.min(scroll.maximum, Math.max(scroll.minimum, value + scroll.notches * step))
 }
 
 function delayMilliseconds(state) {

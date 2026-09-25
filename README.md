@@ -19,12 +19,13 @@ the action and the interval.
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/settings-panel.png" alt="Idler settings panel above the bar" width="325">
+  <img src="docs/screenshots/settings-panel.png" alt="Idler settings panel above the bar" width="420">
 </p>
 
-| Running (red icon)                                          | Stopped                                                     |
-|-------------------------------------------------------------|-------------------------------------------------------------|
-| ![Bar with Idler running](docs/screenshots/bar-running.png) | ![Bar with Idler stopped](docs/screenshots/bar-stopped.png) |
+| State              | Bar                                                         |
+|--------------------|-------------------------------------------------------------|
+| Running (red icon) | ![Bar with Idler running](docs/screenshots/bar-running.png) |
+| Stopped            | ![Bar with Idler stopped](docs/screenshots/bar-stopped.png) |
 
 ## ✨ Features
 
@@ -33,7 +34,8 @@ the action and the interval.
 - **Four presets**: `F15`, `F13`, `Shift`, or `Mouse 1 px`. F13 to F15 are bound to nothing in
   most apps, which makes them invisible pulses.
 - **Any other key**: type a keysym (`Scroll_Lock`, `F20`, `space`...) and press Enter.
-- **Tap or hold**: a key is tapped by default, or held down for up to 10 s on each pulse.
+- **Tap or hold**: a key is tapped by default, or held down for up to 10 s on each pulse. For
+  example `Shift` held `500` ms every 30 s shows as `Idler: Shift held 500 ms every 30 s`.
 - **Start delay**: once switched on, wait up to an hour before the first pulse, for instance to
   leave the room or switch windows first.
 - **Any interval**, from 100 ms to a day, in milliseconds or seconds.
@@ -100,9 +102,10 @@ calls `omarchy-shell azeroht.idler`, remove it from `~/.config/hypr/bindings.lua
 | Panel switch                   | Start or stop                                          |
 | Panel preset button            | Repeat that action                                     |
 | Panel "Other key" field, Enter | Repeat that keysym (letters, digits and `_` only)      |
-| Panel hold field               | Keep the key down that long, in ms (0 for a tap)       |
+| Panel hold field               | Hold time in ms, 0 for a tap, 500 for half a second    |
 | Panel interval and unit        | Change the pace; anything under 100 ms is raised to it |
 | Panel start delay field        | Wait that long, in s, after switching on (0 at once)   |
+| Mouse wheel on a number field  | One step per notch, ten steps with Shift held          |
 
 Every change applies at once and is saved in `~/.local/state/azeroht-idler.json`:
 
