@@ -152,35 +152,6 @@ test.describe("describe and actionLabel", () => {
   });
 });
 
-test.describe("themeGreen", () => {
-  const GRUVBOX = 'accent = "#d79921"\ngreen = "#98971a"\nbright_green = "#b8bb26"\n';
-
-  test("prefers the bright green", () => {
-    // ASSERT
-    assert.equal(Model.themeGreen(GRUVBOX), "#b8bb26");
-  });
-
-  test("falls back to the green", () => {
-    // ASSERT
-    assert.equal(Model.themeGreen('green = "#98971a"'), "#98971a");
-  });
-
-  test("is empty when the theme has no green", () => {
-    // ASSERT
-    assert.equal(Model.themeGreen('accent = "#d79921"'), "");
-  });
-
-  test("is empty for an unreadable theme", () => {
-    // ASSERT
-    assert.equal(Model.themeGreen(undefined), "");
-  });
-
-  test("ignores a key that only starts like green", () => {
-    // ASSERT
-    assert.equal(Model.themeGreen('green_dim = "#000000"'), "");
-  });
-});
-
 test.describe("command", () => {
   test("nudges the mouse", () => {
     // ASSERT

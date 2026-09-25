@@ -78,23 +78,6 @@ function describe(state) {
   return actionLabel(state.action) + " every " + state.interval + " " + state.unit
 }
 
-// Value of a top-level key in a theme colors.toml ("green = \"#98971a\""),
-// or an empty string when the theme does not define it.
-function paletteValue(toml, key) {
-  var lines = String(toml || "").split("\n")
-  for (var index = 0; index < lines.length; index++) {
-    var parts = lines[index].split("=")
-    if (parts.length === 2 && parts[0].trim() === key) return parts[1].trim().split('"').join("")
-  }
-  return ""
-}
-
-// Running color: the theme's bright green, else its green, else empty (the
-// caller then keeps its fallback).
-function themeGreen(toml) {
-  return paletteValue(toml, "bright_green") || paletteValue(toml, "green")
-}
-
 function command(scriptPath, action) {
   return action === MOUSE ? [scriptPath, MOUSE] : [scriptPath, "key", action]
 }
