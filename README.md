@@ -22,14 +22,14 @@ the action and the interval.
   <img src="docs/screenshots/settings-panel.png" alt="Idler settings panel above the bar" width="325">
 </p>
 
-| Running (red icon)                                          | Stopped                                                     |
+| Running (green icon)                                         | Stopped                                                     |
 |-------------------------------------------------------------|-------------------------------------------------------------|
 | ![Bar with Idler running](docs/screenshots/bar-running.png) | ![Bar with Idler stopped](docs/screenshots/bar-stopped.png) |
 
 ## ✨ Features
 
-- **One-click toggle** in the bar, with the active color while it runs and a tooltip such as
-  `Idler: F15 every 30 s`.
+- **One-click toggle** in the bar: the icon turns your theme's green while it runs, with a
+  tooltip such as `Idler: F15 every 30 s`.
 - **Four presets**: `F15`, `F13`, `Shift`, or `Mouse 1 px`. F13 to F15 are bound to nothing in
   most apps, which makes them invisible pulses.
 - **Any other key**: type a keysym (`Scroll_Lock`, `F20`, `space`...) and press Enter.
