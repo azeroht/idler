@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "azeroht.idler",
+  "name": "Idler",
+  "version": "0.1.0",
+  "author": "azeroht",
+  "license": "MIT",
+  "homepage": "https://github.com/azeroht/idler",
+  "description": "Repeats a key press or a 1 px mouse nudge at a chosen interval to keep the session active",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Idler",
+    "description": "Simulated activity at a chosen interval",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

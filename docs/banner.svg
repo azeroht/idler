@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-labelledby="title description">
+  <title id="title">Idler</title>
+  <desc id="description">Idler, an Omarchy bar plugin that keeps your session awake with a key press or a one-pixel mouse nudge.</desc>
+  <defs>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#d79921" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#d79921" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#d79921" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="320" rx="24" fill="#000000"/>
+  <rect x="1" y="1" width="1278" height="318" rx="23" fill="none" stroke="#3c3836" stroke-width="2"/>
+
+  <!-- Mouse, drawn like the bar glyph -->
+  <g transform="translate(150 70)">
+    <rect x="0" y="0" width="120" height="180" rx="60" fill="none" stroke="#ebdbb2" stroke-width="10"/>
+    <line x1="60" y1="0" x2="60" y2="72" stroke="#ebdbb2" stroke-width="10"/>
+    <line x1="0" y1="72" x2="120" y2="72" stroke="#ebdbb2" stroke-width="10"/>
+    <rect x="52" y="24" width="16" height="34" rx="8" fill="#fb4934"/>
+  </g>
+
+  <!-- Activity pulses -->
+  <g fill="none" stroke="#d79921" stroke-linecap="round" stroke-width="6">
+    <path d="M300 160 q14 -24 0 -48" opacity="0.9"/>
+    <path d="M324 184 q30 -48 0 -96" opacity="0.6"/>
+    <path d="M348 208 q46 -72 0 -144" opacity="0.3"/>
+  </g>
+
+  <text x="440" y="150" fill="#ebdbb2" font-family="JetBrains Mono, DejaVu Sans Mono, Menlo, monospace" font-size="96" font-weight="700">Idler</text>
+  <text x="444" y="202" fill="#928374" font-family="JetBrains Mono, DejaVu Sans Mono, Menlo, monospace" font-size="28">Keep your Omarchy session awake.</text>
+  <text x="444" y="244" fill="#d79921" font-family="JetBrains Mono, DejaVu Sans Mono, Menlo, monospace" font-size="24">F15 every 30 s  |  mouse 1 px every 500 ms  |  your call</text>
+  <rect x="440" y="266" width="720" height="3" fill="url(#glow)"/>
+</svg>
