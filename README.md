@@ -73,6 +73,20 @@ omarchy-shell shell rescanPlugins
 omarchy plugin enable azeroht.idler
 ```
 
+## 🗑️ Uninstall
+
+Stop Idler first, so no pulse is left running, then remove the plugin and its state file:
+
+```bash
+omarchy-shell azeroht.idler stop
+omarchy plugin remove azeroht.idler
+rm -f ~/.local/state/azeroht-idler.json
+```
+
+`omarchy plugin remove` takes the widget out of the bar and deletes the plugin folder. Idler
+writes nothing else: no configuration file of yours is touched. If you added a keybinding that
+calls `omarchy-shell azeroht.idler`, remove it from `~/.config/hypr/bindings.lua` too.
+
 ## 🖱️ Usage
 
 | Action                         | Result                                                 |
