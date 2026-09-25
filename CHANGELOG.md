@@ -6,6 +6,33 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0-rc.1] - 2026-09-26
+
+### ✨ Features
+
+- ✨ **action**: hold the key down for a configurable time on each pulse (d3e0e60)
+- ✨ **timer**: wait a configurable delay before the first pulse (87fcd30)
+
+### 🐛 Bug fixes
+
+- 🐛 **panel**: let the settings panel receive keyboard input (4a37191)
+- 🐛 **panel**: apply a typed number without waiting for enter (563105a)
+
+### 💄 UI and UX
+
+- 🚸 **panel**: step number fields with the mouse wheel, ten at a time with shift (5c63aa8)
+- 💄 **panel**: show a hold example in the field label (f7bba4e)
+
+### 📝 Documentation
+
+- 📝 **readme**: document the hold example and the new screenshots (22bdb1c)
+
+### 🔧 Chores
+
+- 🍱 **docs**: refresh the screenshots with the new settings (afff638)
+- 🔧 **github**: add a codeowners file for automatic review requests (a798380)
+- 🔧 **github**: let dependabot keep the ci actions up to date (369f438)
+
 ## [0.1.1] - 2026-09-25
 
 ### 📝 Documentation
