@@ -6,10 +6,25 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### ✨ Added
+## [0.1.0-rc.1] - 2026-09-25
 
-- Bar widget with a mouse icon: left click starts or stops, right click opens the settings.
-- Settings panel: F15, F13, Shift or a 1 px mouse nudge, any other keysym, interval in ms or s.
-- State kept in `~/.local/state/azeroht-idler.json`, shared by the bars of every monitor.
-- IPC target `azeroht.idler`: `toggle`, `start`, `stop`, `open`, `close`, `status`.
-- Unit tests for the model, the package and the pulse script, run by CI.
+### ✨ Features
+
+- ✨ add the idler bar widget, settings panel and pulse script (a502e58)
+
+### 📝 Documentation
+
+- 📝 write the readme and the changelog (c954d6e)
+
+### ✅ Tests
+
+- ✅ cover the model, the package and the pulse script (aa09417)
+
+### 👷 Build and CI
+
+- 👷 lint and test on the self-hosted runner (d1ba1f4)
+
+### 🔧 Chores
+
+- 🎉 begin project (0c16f08)
+- 🍱 **docs**: add the banner and screenshots (9e2e9d8)
