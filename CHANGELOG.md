@@ -6,6 +6,12 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-26
+
+### 👷 Build and CI
+
+- ⬆️ **deps**: Bump actions/checkout from 4 to 7 (4b2c5b3)
+
 ## [0.2.0] - 2026-09-26
 
 ### ✨ Features
