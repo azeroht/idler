@@ -5,8 +5,8 @@ import "Model.js" as Model
 
 // Idler settings, styled like the native panels: on / off, the repeated
 // action (preset keys, a free key or the mouse) with how long a key is held,
-// and the interval with its unit. Every choice goes up through changed() and
-// applies at once.
+// the interval with its unit, and the delay before the first pulse. Every
+// choice goes up through changed() and applies at once.
 Column {
   id: panel
   property var state: Model.DEFAULTS
@@ -124,6 +124,17 @@ Column {
         onClicked: panel.changed({ unit: modelData })
       }
     }
+  }
+
+  // Start delay: wait after switching on, before the first pulse.
+  NumberField {
+    label: "Start delay (s), 0 to start at once"
+    from: 0
+    to: Model.MAXIMUM_DELAY_SECONDS
+    value: panel.state.delay
+    foreground: panel.foreground
+    fontSize: Style.font.bodySmall
+    onModified: function(value) { panel.changed({ delay: value }) }
   }
 
   Text {
