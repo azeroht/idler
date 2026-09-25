@@ -6,7 +6,7 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-## [0.1.0-rc.1] - 2026-09-25
+## [0.1.0] - 2026-09-25
 
 ### ✨ Features
 
@@ -23,6 +23,9 @@ uses [Semantic Versioning](https://semver.org/).
 ### 👷 Build and CI
 
 - 👷 lint and test on the self-hosted runner (d1ba1f4)
+- 👷 run on GitHub-hosted runners with read-only permissions (f10c166)
+- 💚 pass the test files to node --test explicitly for node 22 (18d193b)
+- 👷 harden the workflow for the public repository (d5ba25d)
 
 ### 🔧 Chores
 
