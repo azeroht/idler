@@ -8,7 +8,8 @@ import "Model.js" as Model
 
 // Idler: simulated activity (a key press or a one-pixel cursor nudge) at the
 // chosen interval, to keep the session and chat statuses active.
-// Left click: start / stop. Right click: settings.
+// Left click: start / stop. Right click: settings. While it runs, the icon
+// turns the theme's green.
 // The state (running, action, interval) survives shell restarts in
 // ~/.local/state/azeroht-idler.json. Every monitor has its own bar, hence its
 // own instance of this widget: they all follow that file, and only the
@@ -18,6 +19,9 @@ BarWidget {
   moduleName: "azeroht.idler"
 
   property var state: Model.DEFAULTS
+  // The shell exposes accent, urgent and muted, but no green: it is read from
+  // the current theme's colors.toml.
+  property color runningColor: Color.accent
   property bool popupOpen: false
   readonly property string scriptPath: String(Qt.resolvedUrl("idler.sh")).replace("file://", "")
   readonly property bool sendsPulses: {
@@ -66,6 +70,14 @@ BarWidget {
     onLoaded: root.state = Model.normalize(Model.parse(text()))
   }
 
+  FileView {
+    path: Color.currentThemePath + "/colors.toml"
+    printErrors: false
+    watchChanges: true
+    onFileChanged: reload()
+    onLoaded: root.runningColor = Model.themeGreen(text()) || Color.accent
+  }
+
   Timer {
     interval: Model.intervalMilliseconds(root.state)
     running: root.state.enabled && root.sendsPulses
@@ -80,6 +92,7 @@ BarWidget {
     // Nerd Font: mouse.
     text: "\u{f037d}"
     active: root.state.enabled
+    activeColor: root.runningColor
     tooltipText: root.state.enabled ? "Idler: " + Model.describe(root.state) : "Idler: off"
     onPressed: function(mouseButton) {
       if (mouseButton === Qt.RightButton) root.popupOpen = !root.popupOpen
