@@ -1,13 +1,14 @@
 .PHONY: all test lint help
 
-SHELL_SCRIPTS = idler.sh tests/idler.test.sh
+SHELL_SCRIPTS = idler.sh state.sh tests/idler.test.sh tests/state.test.sh
 
 all: lint test
 
-## test : unit tests of the model and the package, then the pulse script
+## test : unit tests of the model and the package, then the shell scripts
 test:
 	node --test tests/*.test.mjs
 	./tests/idler.test.sh
+	./tests/state.test.sh
 
 ## lint : shell syntax, shellcheck, JSON manifest
 lint:
