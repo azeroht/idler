@@ -6,6 +6,12 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-09-26
+
+### 🐛 Bug fixes
+
+- 🔒️ **state**: read and write the state file through a hardened script (44c1519)
+
 ## [0.2.1] - 2026-09-26
 
 ### 👷 Build and CI
