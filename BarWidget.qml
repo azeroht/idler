@@ -12,8 +12,9 @@ import "Model.js" as Model
 // first pulse waits for the start delay, then one follows every interval.
 // The state (running, action, interval, delay) survives shell restarts in
 // ~/.local/state/azeroht-idler.json. Every monitor has its own bar, hence its
-// own instance of this widget: they all follow that file, and only the
-// instance on the first screen sends the pulses, so there is never two.
+// own instance of this widget: they all read that file back after each save,
+// and only the instance on the first screen sends the pulses, so there is
+// never two.
 BarWidget {
   id: root
   moduleName: "azeroht.idler"
@@ -24,6 +25,11 @@ BarWidget {
   // False from switching on until the start delay has run out.
   property bool isDelayOver: false
   readonly property string scriptPath: String(Qt.resolvedUrl("idler.sh")).replace("file://", "")
+  readonly property string stateScriptPath: String(Qt.resolvedUrl("state.sh")).replace("file://", "")
+  readonly property string statePath: Color.stateHome + "/azeroht-idler.json"
+  // A load or a save asked while the previous one still runs.
+  property bool isLoadPending: false
+  property bool isSavePending: false
   readonly property bool sendsPulses: {
     const window = root.QsWindow.window
     return !!window && Quickshell.screens.length > 0 && window.screen === Quickshell.screens[0]
@@ -44,7 +50,17 @@ BarWidget {
 
   function update(changes) {
     state = Model.normalize(Object.assign({}, state, changes))
-    stateFile.setText(JSON.stringify(state, null, 2) + "\n")
+    save()
+  }
+
+  function save() {
+    if (saver.running) isSavePending = true
+    else saver.running = true
+  }
+
+  function reloadState() {
+    if (loader.running) isLoadPending = true
+    else loader.running = true
   }
 
   onIsOnChanged: {
@@ -67,13 +83,34 @@ BarWidget {
     function status(): string { return root.state.enabled ? Model.describe(root.state) : "off" }
   }
 
-  FileView {
-    id: stateFile
-    path: Color.stateHome + "/azeroht-idler.json"
-    printErrors: false
-    watchChanges: true
-    onFileChanged: reload()
-    onLoaded: root.state = Model.normalize(Model.parse(text()))
+  // The state file is only ever touched by state.sh, in its own process: a
+  // file replaced by a symlink, a FIFO, a device or a huge file can neither
+  // redirect the access nor block or flood the shell.
+  Process {
+    id: loader
+    command: [root.stateScriptPath, "load", root.statePath]
+    running: true
+    stdout: StdioCollector {
+      onStreamFinished: if (text.length > 0) root.state = Model.normalize(Model.parse(text))
+    }
+    onExited: {
+      if (!root.isLoadPending) return
+      root.isLoadPending = false
+      Qt.callLater(root.reloadState)
+    }
+  }
+
+  Process {
+    id: saver
+    command: [root.stateScriptPath, "save", root.statePath, JSON.stringify(root.state, null, 2)]
+    onExited: function(exitCode) {
+      if (root.isSavePending) {
+        root.isSavePending = false
+        Qt.callLater(root.save)
+      } else if (exitCode === 0) {
+        root.broadcast("reloadState")
+      }
+    }
   }
 
   Timer {

@@ -34,7 +34,9 @@ test("manifest version is semver", () => {
   assert.match(manifest.version, SEMVER);
 });
 
-test("pulse script is executable", () => {
-  // ASSERT
-  assert.doesNotThrow(() => accessSync(new URL("idler.sh", root), constants.X_OK));
-});
+for (const script of ["idler.sh", "state.sh"]) {
+  test(`${script} is executable`, () => {
+    // ASSERT
+    assert.doesNotThrow(() => accessSync(new URL(script, root), constants.X_OK));
+  });
+}

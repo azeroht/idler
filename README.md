@@ -122,7 +122,8 @@ Every change applies at once and is saved in `~/.local/state/azeroht-idler.json`
 
 `action` is `mouse` or a keysym, `unit` is `ms` or `s`, `hold` is in milliseconds (0 to 10000,
 ignored for the mouse and never longer than the interval), `delay` is in seconds (0 to 3600). An
-invalid or unreadable file falls back to the defaults: F15 every 30 seconds, stopped.
+invalid or unreadable file falls back to the defaults: F15 every 30 seconds, stopped. The file is
+read when the shell starts and after each change; an edit by hand shows up at the next one.
 
 ## ⌨️ IPC
 
@@ -151,14 +152,16 @@ o.bind("SUPER + CTRL + I", "Toggle the idler", "omarchy-shell azeroht.idler togg
 | `SettingsPanel.qml` | Settings popup built from the native Omarchy UI kit                |
 | `Model.js`          | Pure logic: validation, defaults, interval maths, command building |
 | `idler.sh`          | One pulse: a key tapped or held with `wtype`, or a 1 px nudge      |
+| `state.sh`          | Reads and writes the state file, with the safety checks            |
 | `manifest.json`     | Omarchy plugin manifest                                            |
 
 - **Timing**: switching on starts the delay; when it runs out, the first pulse fires at once, then
   one follows every interval. Switching off during the delay cancels it.
 - **Mouse nudge**: the cursor moves one pixel right, then 50 ms later one pixel left from wherever
   it is. If you move the mouse in between, your move is kept: the cursor never jumps back.
-- **Several monitors**: each monitor has its own bar, hence its own widget instance. They all watch
-  the state file, so they always agree, and only the instance on the first screen runs the timer.
+- **Several monitors**: each monitor has its own bar, hence its own widget instance. After each
+  save, every instance reads the state file back, so they always agree, and only the instance on
+  the first screen runs the timer.
 - **Idle lock**: key presses come from a virtual keyboard. They keep apps and chat statuses active;
   whether they also postpone your idle lock depends on how your compositor and idle daemon count
   virtual input. To disable the lock, use Omarchy's own idle settings.
@@ -170,12 +173,16 @@ o.bind("SUPER + CTRL + I", "Toggle the idler", "omarchy-shell azeroht.idler togg
   way: digits only, 10000 at most.
 - Commands run as argument lists (`Quickshell.execDetached`), never through a shell string.
 - The cursor position read from Hyprland must be two integers before it is used.
+- The state file is only read and written by `state.sh`, in its own process. It reads a regular
+  file of 4 KiB at most, never a symlink, a FIFO or a device, under a 2 s timeout. It writes a
+  private temporary file, then renames it over the path, so a symlink there is replaced, never
+  followed.
 - The plugin writes a single file, its state, and makes no network access.
 
 ## 🧪 Development
 
 ```bash
-make test   # node --test (model and package) + shell tests of idler.sh with stubbed wtype and hyprctl
+make test   # node --test (model and package) + shell tests of idler.sh (stubbed wtype, hyprctl) and state.sh
 make lint   # bash -n, shellcheck (native or Docker), manifest JSON
 ```
 
